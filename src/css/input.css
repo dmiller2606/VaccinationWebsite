@@ -1,0 +1,10 @@
+#map {
+    height: 500px;
+    width: 100%;
+    position: relative;
+    z-index: 0;
+}
+
+.cardImg {
+    width: 400px;
+}
