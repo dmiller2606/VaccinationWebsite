@@ -1,7 +1,7 @@
-(function () {
+
     map = L.map('map', {
         scrollWheelZoom: false
-    }).setView([48.1534215, 11.5505308], 13);
+    }).setView([48.1534215, 11.5505308], 1);
     map.on('focus', function () {
         map.scrollWheelZoom.enable();
     });
@@ -9,25 +9,11 @@
         map.scrollWheelZoom.disable();
     });
     L.tileLayer.provider('Stadia.OSMBright').addTo(map);
-    var geojson = new L.geoJSON(campusJSON, {style: campusStyle})
+    var geojson = L.geoJSON(countriesJSON, {style: style, onEachFeature: onEachFeature});
     geojson.addTo(map);
 
     checkZoomControls();
     document.getElementById("zoomCheck").onclick = checkZoomControls;
-    var lothstrM = L.marker([48.15500, 11.55581]).addTo(map);
-    var karlstrM = L.marker([48.14284, 11.56842]).addTo(map);
-    var pasingM = L.marker([48.14163, 11.45095]).addTo(map);
-    
-    lothstrM.bindPopup("<h5>Campus Lothstr.</h5><p>Hauptcampus der Hochschule München</p>");
-    karlstrM.bindPopup("<h5>Campus Karlstr.</h5><p>Campus für Bauwesen und Geoinformation</p>");
-    pasingM.bindPopup("<h5>Campus Pasing</h5><p>Campus für Geisteswissenschaften</p>");
-
-    document.getElementById("cardLoth").onclick = zoomToLocation;
-    document.getElementById("cardKarl").onclick = zoomToLocation;
-    document.getElementById("cardPasing").onclick = zoomToLocation;
-
-    
-})();
 
 function checkZoomControls() {
     if (document.getElementById("zoomCheck").checked) {
@@ -37,18 +23,58 @@ function checkZoomControls() {
     }
 }
 
-function zoomToLocation(e) {
-    var target = e.target
-    console.log("zoomTo Click:" + target.id)
-    switch (target.id) {
-        case "cardLoth":
-            map.flyTo([48.15500, 11.55581], 17);
-            break;
-        case "cardKarl":
-            map.flyTo([48.14284, 11.56842], 17);
-            break;
-        case "cardPasing":
-            map.flyTo([48.14163, 11.45095], 17);
-            break;
+function onEachFeature(feature,layer){
+    layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: zoomToFeature
+    });
+}
+
+function highlightFeature(e) {
+    var layer = e.target;
+
+    layer.setStyle({
+        weight: 5,
+        color: 'white',
+        dashArray: '',
+        fillOpacity: .7
+    });
+
+    if(!L.Browser.ie && !L.Browser.opera && !L.Browser.edge){
+        layer.bringToFront();
     }
 }
+
+function resetHighlight(e) {
+    geojson.resetStyle(e.target);
+}
+
+function zoomToFeature(e) {
+    map.fitBounds(e.target.getBounds());
+}
+
+function getColor(i){
+    return i >= 90 ? '#7f0000':
+           i >= 80 ? '#b30000':
+           i >= 70 ? '#d7301f':
+           i >= 60 ? '#ef6548':
+           i >= 50 ? '#fc8d59':
+           i >= 40 ? '#fdbb84':
+           i >= 30 ? '#fdd49e':
+           i >= 20 ? '#fee8c8':
+           i >= 10 ? '#fff7ec':
+           '#fffefc';
+}
+
+function style(feature){
+    return {
+        fillColor: getColor(20),
+        weight: 2,
+        opacity: 1,
+        color : 'white',
+        dashArray: '5',
+        fillOpacity: .7
+    }
+}
+
