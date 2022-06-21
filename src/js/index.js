@@ -1,19 +1,154 @@
 
-    map = L.map('map', {
-        scrollWheelZoom: false
-    }).setView([48.1534215, 11.5505308], 1);
-    map.on('focus', function () {
-        map.scrollWheelZoom.enable();
-    });
-    map.on('blur', function () {
-        map.scrollWheelZoom.disable();
-    });
-    L.tileLayer.provider('Stadia.OSMBright').addTo(map);
-    var geojson = L.geoJSON(countriesJSON, {style: style, onEachFeature: onEachFeature});
-    geojson.addTo(map);
+map = L.map('map', {
+    scrollWheelZoom: false,
+    worldCopyJump: true
+}).setView([0, 0], 1)
 
-    checkZoomControls();
-    document.getElementById("zoomCheck").onclick = checkZoomControls;
+map.createPane('labels');
+map.getPane('labels').style.zIndex = 650;
+map.getPane('labels').style.pointerEvents = 'none';
+
+map.on('focus', function () {
+    map.scrollWheelZoom.enable();
+});
+map.on('blur', function () {
+    map.scrollWheelZoom.disable();
+});
+L.tileLayer.provider('CartoDB.VoyagerNoLabels').addTo(map);
+L.tileLayer.provider('CartoDB.VoyagerOnlyLabels', { pane: 'labels' }).addTo(map);
+var geojson = L.geoJSON(countriesJSON, { style: style, onEachFeature: onEachFeature });
+geojson.addTo(map);
+
+checkZoomControls();
+document.getElementById("zoomCheck").onclick = checkZoomControls;
+
+var legend = L.control({ position: 'bottomright' });
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i>' +
+            grades[i] + (grades[i + 1] ? ' &ndash;&#160;' + grades[i + 1] + '%' : '+%') + '<br>';
+    }
+
+    return div;
+};
+
+legend.addTo(map);
+
+var info = L.control();
+
+info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this.update();
+    return this._div;
+};
+
+// method that we will use to update the control based on feature properties passed
+info.update = function (props) {
+    this._div.innerHTML = '<h4>Population Vaccinated</h4>' + (props ?
+        '<b>' + props.NAME_EN + '</b><br />' + lookupRecentIndex(props.WB_A3) + ' people / 100 people'
+        : 'Hover over a Country');
+};
+
+info.addTo(map);
+
+var chart = L.control({ position: 'bottomleft' });
+
+chart.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this.update();
+    return this._div;
+};
+
+// method that we will use to update the control based on feature properties passed
+chart.update = function (props) {
+    if (props) {
+        Chart.overrides.line.spanGaps = true;
+        this._div.innerHTML = '<canvas id="vaccinationHistory" width="500" height="200"></canvas>';
+        const ctx = document.getElementById('vaccinationHistory').getContext('2d');
+        data = lookupData(props.WB_A3)
+        console.log(data);
+        const vaccinationHistory = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'People Vaccinated / 100 People',
+                    data: data,
+                    parsing: {
+                        yAxisKey: 'people_vaccinated_per_hundred',
+                        xAxisKey: 'date'
+                    },
+                    backgroundColor: getColor(50),
+                    tension: .2,
+                },{
+                    label: 'People fully Vaccinated / 100 People',
+                    data: data,
+                    parsing: {
+                        yAxisKey: 'people_fully_vaccinated_per_hundred',
+                        xAxisKey: 'date'
+                    },
+                    backgroundColor: getColor(80),
+                    tension: .2,
+                }
+                ]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Population Vaccinated in ' + props.NAME_EN
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'in %'
+                        }
+                    }
+                }
+            }
+        })
+    } else { 
+        this._div.innerHTML = 'Click on a Country for more Information';
+    }
+};
+
+chart.addTo(map);
+
+function lookupData(countryCode) {
+    if (coviddata.find(country => country.iso_code === countryCode) !== undefined) {
+        return coviddata.find(dataCountry => dataCountry.iso_code === countryCode).data;
+    }
+    return undefined;
+}
+
+function lookupRecentIndex(countryCode) {
+    index = 0
+    if (lookupData(countryCode) !== undefined) {
+        dataCountry = lookupData(countryCode)
+        for (let i = dataCountry.length - 1; i >= 0; i--) {
+            entry = dataCountry[i];
+            if (entry['people_vaccinated_per_hundred'] !== undefined) {
+                index = entry['people_vaccinated_per_hundred'];
+                break;
+            }
+        }
+        if (index === undefined) {
+            index = 0
+        }
+    }
+
+    return index
+}
+
 
 function checkZoomControls() {
     if (document.getElementById("zoomCheck").checked) {
@@ -23,7 +158,7 @@ function checkZoomControls() {
     }
 }
 
-function onEachFeature(feature,layer){
+function onEachFeature(feature, layer) {
     layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
@@ -41,38 +176,37 @@ function highlightFeature(e) {
         fillOpacity: .7
     });
 
-    if(!L.Browser.ie && !L.Browser.opera && !L.Browser.edge){
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
         layer.bringToFront();
     }
+
+    info.update(layer.feature.properties);
 }
 
 function resetHighlight(e) {
     geojson.resetStyle(e.target);
+    info.update();
 }
 
 function zoomToFeature(e) {
     map.fitBounds(e.target.getBounds());
+    chart.update(e.target.feature.properties);
 }
 
-function getColor(i){
-    return i >= 90 ? '#7f0000':
-           i >= 80 ? '#b30000':
-           i >= 70 ? '#d7301f':
-           i >= 60 ? '#ef6548':
-           i >= 50 ? '#fc8d59':
-           i >= 40 ? '#fdbb84':
-           i >= 30 ? '#fdd49e':
-           i >= 20 ? '#fee8c8':
-           i >= 10 ? '#fff7ec':
-           '#fffefc';
+function getColor(i) {
+    return chroma.scale('Greens').colors(10)[Math.floor(i / 10)]
 }
 
-function style(feature){
+function style(feature) {
+    index = 0
+    if (feature.properties['WB_A3'] !== undefined) {
+        index = lookupRecentIndex(feature.properties['WB_A3'])
+    }
     return {
-        fillColor: getColor(20),
+        fillColor: getColor(index),
         weight: 2,
         opacity: 1,
-        color : 'white',
+        color: 'white',
         dashArray: '5',
         fillOpacity: .7
     }

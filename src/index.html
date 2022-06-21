@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Campus Overview Hochschule München</title>
+  <title>Corona Vaccination Dashboard Hochschule München</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/input.css">
@@ -19,7 +19,10 @@
   <!-- UIkit JS -->
   <script src="https://cdn.jsdelivr.net/npm/uikit@3.13.9/dist/js/uikit.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/uikit@3.13.9/dist/js/uikit-icons.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
   <script src="data/countries.js"></script>
+  <script src="data/vaccinations.json"></script>
 </head>
 
 <body>
@@ -28,7 +31,7 @@
       <div class="uk-navbar-left">
         <a href="" class="uk-navbar-item uk-logo">
           <image class="uk-preserve  uk-height-match"
-            src="https://w3-mediapool.hm.edu/mediapool/media/_technik/img/logo_4/HM_Logo.svg" uk-svg></image>
+            src="https://w3-mediapool.hm.edu/mediapool/media/_technik/img/logo_4/HM_Logo.svg" uk-svg>Corona Vaccination Dashboard</image>
         </a>
       </div>
       <div class="uk-navbar-right">
@@ -43,33 +46,8 @@
       </div>
     </div>
   </div>
-  <div id="map"></div>
+  <div class="" id="map"></div>
   <div class="uk-flex uk-flex-center uk-margin-top uk-margin-auto">
-    <div id="cardLoth" class="uk-card uk-card-default uk-card-body uk-card-hover uk-margin-left uk-transition-toggle">
-      <div class="uk-inline">
-        <img class="cardImg" src="img/lothstr.jpg">
-        <div id="cardLoth"
-          class="uk-position-cover uk-overlay uk-overlay-default uk-flex uk-flex-center uk-flex-middle uk-transition-fade">
-          View</div>
-      </div>
-    </div>
-    <div id="cardKarl" class="uk-card uk-card-default uk-card-body uk-margin-left uk-card-hover uk-transition-toggle">
-      <div class="uk-inline">
-        <img class="cardImg" src="img/karlsstr.jpg">
-        <div id="cardKarl"
-          class="uk-position-cover uk-overlay uk-overlay-default uk-flex uk-flex-center uk-flex-middle uk-transition-fade">
-          View</div>
-      </div>
-    </div>
-    <div id="cardPasing"
-      class="uk-card uk-card-default uk-card-body uk-margin-left uk-card-hover uk-margin-right uk-transition-toggle">
-      <div class="uk-inline">
-        <img class="cardImg" src="img/pasing.jpg">
-        <div id="cardPasing"
-          class="uk-position-cover uk-overlay uk-overlay-default uk-flex uk-flex-center uk-flex-middle uk-transition-fade">
-          View</div>
-      </div>
-    </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script src="js/leaflet-providers.js"></script>
