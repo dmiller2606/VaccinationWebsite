@@ -16,8 +16,22 @@ map.on('blur', function () {
 });
 L.tileLayer.provider('CartoDB.VoyagerNoLabels').addTo(map);
 L.tileLayer.provider('CartoDB.VoyagerOnlyLabels', { pane: 'labels' }).addTo(map);
-var geojson = L.geoJSON(countriesJSON, { style: style, onEachFeature: onEachFeature });
-geojson.addTo(map);
+var countriesVaccinated = L.geoJSON(countriesJSON, { style: style, onEachFeature: onEachFeature });
+countriesVaccinated.addTo(map);
+var vaccinatedBundeslaender
+var layerControl = L.control.layers(null,{"Vaccinations": countriesVaccinated},{position: 'topleft'}).addTo(map);
+getHospitalsGer().then(json => {
+    var hospitals = L.geoJSON(json,{style:style,onEachFeature:onEachFeature, pointToLayer: function(feature,latlng){
+        var smallIcon = new L.Icon({
+            iconSize: [10,10],
+            iconAnchor: [5,5],
+            popupAnchor: [1, -24],
+            iconUrl: 'img/hospital.png'
+        });
+        return L.marker(latlng,{icon: smallIcon});
+    }})
+    layerControl.addOverlay(hospitals,"Hospitals Germany")
+})
 
 checkZoomControls();
 document.getElementById("zoomCheck").onclick = checkZoomControls;
@@ -27,8 +41,7 @@ var legend = L.control({ position: 'bottomright' });
 legend.onAdd = function (map) {
 
     var div = L.DomUtil.create('div', 'info legend'),
-        grades = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
-        labels = [];
+        grades = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
 
     // loop through our density intervals and generate a label with a colored square for each interval
     for (var i = 0; i < grades.length; i++) {
@@ -123,6 +136,20 @@ chart.update = function (props) {
 
 chart.addTo(map);
 
+
+
+
+
+async function getHospitalsGer() {
+    let url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Krankenhaus_hospital/FeatureServer/0/query?where=1%3D1&outFields=name&outSR=4326&f=geojson'
+    try {
+        let res = await fetch(url);
+        return await res.json();
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 function lookupData(countryCode) {
     if (coviddata.find(country => country.iso_code === countryCode) !== undefined) {
         return coviddata.find(dataCountry => dataCountry.iso_code === countryCode).data;
@@ -184,7 +211,7 @@ function highlightFeature(e) {
 }
 
 function resetHighlight(e) {
-    geojson.resetStyle(e.target);
+    countriesVaccinated.resetStyle(e.target);
     info.update();
 }
 
