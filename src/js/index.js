@@ -58,7 +58,7 @@ legend.addTo(map);
 var info = L.control();
 
 info.onAdd = function (map) {
-    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this._div = L.DomUtil.create('div', 'uk-card uk-card-default uk-card-small uk-border-rounded uk-box-shadow-medium uk-padding-small'); // create a div with a class "info"
     this.update();
     return this._div;
 };
@@ -75,7 +75,7 @@ info.addTo(map);
 var chart = L.control({ position: 'bottomleft' });
 
 chart.onAdd = function (map) {
-    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this._div = L.DomUtil.create('div', 'uk-card uk-card-default uk-card-small uk-border-rounded uk-box-shadow-medium uk-padding-small'); // create a div with a class "info"
     this.update();
     return this._div;
 };
@@ -218,6 +218,8 @@ function resetHighlight(e) {
 function zoomToFeature(e) {
     map.fitBounds(e.target.getBounds());
     chart.update(e.target.feature.properties);
+    highlightFeature(e);
+
 }
 
 function getColor(i) {
